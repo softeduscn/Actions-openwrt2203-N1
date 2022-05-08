@@ -174,7 +174,6 @@ echo
 
 echo "修改根文件系统相关配置 ... "
 cd $TGT_ROOT
-adjust_root_password
 copy_supplement_files
 extract_glibc_programs
 #adjust_docker_config

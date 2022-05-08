@@ -1591,9 +1591,3 @@ function clean_work_env() {
     echo "完成"
     echo
 }
-
-#set root password
-function adjust_root_password() {
-sed -i 's/root:::0:99999:7:::/root:$1$zi2Q3mx.$FKnJLxOCjUxEX22lf3sXx0:19049:0:99999:7:::/g' ./etc/shadow
-echo "root password is set."
-}
