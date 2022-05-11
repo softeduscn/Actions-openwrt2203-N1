@@ -11,7 +11,7 @@ EOF
 
 cat > /etc/config/ttyd <<EOF
 config ttyd
-	option interface 'br-lan'
+	option interface '@lan'
 	option command '/bin/login'
 EOF
 
