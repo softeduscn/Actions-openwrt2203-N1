@@ -97,8 +97,8 @@ jobs:
         chmod +x $DIY_P2_SH
         kpath='https://raw.githubusercontent.com/softeduscn/openwrt/master/opt/kernel/'
         kout='opt/openwrt_packit/kernel'
-        kversion='5.15.38'
-        krelease='72+o'
+        kversion='5.15.39'
+        krelease='73+o'
         kboot='boot-'$kversion'-flippy-'$krelease'.tar.gz'
         kmod='modules-'$kversion'-flippy-'$krelease'.tar.gz'
         kdbt='dtb-amlogic-'$kversion'-flippy-'$krelease'.tar.gz'
