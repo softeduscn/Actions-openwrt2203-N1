@@ -20,6 +20,7 @@ function index()
 	entry({"admin", "sys", "sysmonitor", "pptp_status"}, call("action_pptp_status")).leaf = true
 	entry({"admin", "sys", "sysmonitor", "switch_vpn"}, call("switch_vpn")).leaf = true
 	entry({"admin", "sys", "sysmonitor", "switch_ipsecfw"}, call("switch_ipsecfw")).leaf = true
+	entry({"admin", "sys", "sysmonitor", "onoff_vpn"}, call("onoff_vpn")).leaf = true
 	entry({"admin", "sys", "sysmonitor", "get_log"}, call("get_log")).leaf = true
 end
 
@@ -70,6 +71,11 @@ end
 function switch_vpn()
 	luci.http.redirect(luci.dispatcher.build_url("admin", "sys", "sysmonitor"))
 	luci.sys.exec("/usr/share/sysmonitor/sysapp.sh switch_vpn")	
+end
+
+function onoff_vpn()
+	luci.http.redirect(luci.dispatcher.build_url("admin", "sys", "sysmonitor"))
+	luci.sys.exec("/usr/share/sysmonitor/sysapp.sh onoff_vpn")	
 end
 
 function switch_ipsecfw()

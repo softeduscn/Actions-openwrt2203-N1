@@ -8,8 +8,9 @@
 	</table>
 -->
 	<table width="100%" cellspacing="10" id="_xlnetacc_vpn_status_table">
-		<tr><td width="20%" title="Switch VPN" id="_vpn_title"></td><td title="GO TO VPN ..." id="_vpn_state"><em></em></td></tr>
+		<tr><td width="20%" title="Start/Stop VPN" id="_vpn_title"></td><td title="Switch VPN ..." id="_vpn_state"><em></em></td></tr>
 	</table>
+
 <!--	
 	<table width="100%" cellspacing="10" id="_xlnetacc_ipsec_status_table">
 		<tr><td title="GO TO IPSEC" width="20%" id="_ipsec_title"></td><td title="GO TO IPSEC user..." id="_ipsec_state"><em></em></td></tr>
@@ -48,14 +49,20 @@
 			gateway_state.innerHTML ='<em><b><a href="/cgi-bin/luci/admin/network/network"><font color=green>'+status.gateway_state+'</font></a></b></em>';
 		}
 	});
+	XHR.poll(5, '<%=luci.dispatcher.build_url("admin", "sys", "sysmonitor", "gateway_status")%>', null, function(x, status) {
+		if ( x && x.status == 200 ) {
+			gateway_title.innerHTML ='<em><b><a href="sysmonitor/refresh"><font color=green>Gateway Address</font></a></b></em>';
+			gateway_state.innerHTML ='<em><b><a href="/cgi-bin/luci/admin/network/network"><font color=green>'+status.gateway_state+'</font></a></b></em>';
+		}
+	});
 	XHR.poll(5, '<%=luci.dispatcher.build_url("admin", "sys", "sysmonitor", "vpn_status")%>', null, function(x, status) {
 		if ( x && x.status == 200 ) {
 			if ( status.vpn_state.search(/Running/) > 0 ) {
-			vpn_title.innerHTML ='<em><b><font color=green><a href="sysmonitor/switch_vpn">Switch VPN</a></font></b></em>';
-			vpn_state.innerHTML ='<em><b><a href="/cgi-bin/luci/admin/services/'+status.vpn_state.replace(/ Running/,'').toLowerCase()+'"><font color=green>'+status.vpn_state+'</font></a></b></em>';}
+			vpn_title.innerHTML ='<em><b><font color=green><a href="sysmonitor/onoff_vpn">Stop VPN</a></font></b></em>';
+			vpn_state.innerHTML ='<em><b><a href="sysmonitor/switch_vpn"><font color=green>'+status.vpn_state+'</font></a></b></em>';}
 			else if ( status.vpn_state.search(/Stopped/) > 0 ) {
-			vpn_title.innerHTML ='<em><b><font color=red><a href="sysmonitor/switch_vpn">Switch VPN</a></font></b></em>';
-			vpn_state.innerHTML ='<em><b><a href="sysmonitor/switch_vpn"><font color=red>'+status.vpn_state+'</font></a></b></em>';}
+			vpn_title.innerHTML ='<em><b><font color=red><a href="sysmonitor/onoff_vpn">Start VPN</a></font></b></em>';
+			vpn_state.innerHTML ='<em><b><a href="sysmonitor/onoff_vpn"><font color=red>'+status.vpn_state+'</font></a></b></em>';}
 			else {
 			vpn_title.innerHTML ='<em><b></b></em>';
 			vpn_state.innerHTML ='<em><b></b></em>';}

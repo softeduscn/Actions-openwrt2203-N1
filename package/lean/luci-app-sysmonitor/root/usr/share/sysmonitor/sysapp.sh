@@ -157,6 +157,38 @@ switch_vpn() {
 	fi
 }
 
+onoff_vpn() {
+	ssr=$(ps -w |grep /etc/passwall |grep -v grep |wc -l)
+	[ $ssr -lt 1 ] && ssr=$(ps -w |grep ssrplus |grep -v grep |wc -l)
+	if [ $ssr -gt 0 ];  then
+		# Stop Passwall
+		if [ "$(ps -w |grep /etc/passwall |grep -v grep |wc -l)" -gt 0 ]; then
+			uci set passwall.@global[0].enabled=0
+			uci commit passwall
+			/etc/init.d/passwall stop
+		fi
+		# Stop Shadowsocksr
+		[ "$(ps -w |grep ssrplus |grep -v grep |wc -l)" -gt 0 ] && /etc/init.d/shadowsocksr stop
+	else
+		if [ -f "/etc/init.d/passwall" ]; then
+			if [ "$(ps -w |grep /etc/passwall |grep -v grep |wc -l)" -lt 1 ]; then
+			if [ $(uci get passwall.@global[0].tcp_node) != 'nil' ]; then
+				uci set passwall.@global[0].enabled=1
+				uci commit passwall
+				/etc/init.d/passwall restart &
+			fi
+			fi			
+		elif [ -f "/etc/init.d/shadowsocksr" ]; then
+			if [ "$(ps -w |grep ssrplus |grep -v grep |wc -l)" -lt 1 ]; then
+			if [ $(uci get passwall.@global[0].enabled) == 0 ]; then
+				/etc/init.d/shadowsocksr restart &
+			fi
+			fi
+		else
+			touch /tmp/sysmonitor
+		fi		
+	fi
+}
 switch_ipsecfw() {
 	if [ $(uci get firewall.@zone[0].masq) == 1 ]; then
 		uci set firewall.@zone[0].mtu_fix=0
@@ -187,6 +219,9 @@ pptp)
 	;;
 wg)
 	wg
+	;;
+onoff_vpn)
+	onoff_vpn
 	;;
 switch_vpn)
 	switch_vpn
