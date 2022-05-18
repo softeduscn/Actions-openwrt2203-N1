@@ -34,6 +34,7 @@ ping_url() {
 }
 
 while [ "1" == "1" ]; do #死循环
+
 	if [ $(uci get network.lan.ipaddr) == '192.168.1.111' ]; then
 		status=$(ping_url "192.168.1.110")
 		if [ "$status" == 0 ]; then
@@ -47,6 +48,9 @@ while [ "1" == "1" ]; do #死循环
 			[ $(ps -w|grep ddns|grep -v grep|wc -l) == 0 ] && /etc/init.d/ddns restart &
 		fi
 	fi
+
+	/usr/share/sysmonitor/sysapp.sh getip >/www/localip.html
+	/usr/share/sysmonitor/sysapp.sh getip6 >/www/localip6.html
 	[ $(uci_get_by_name $NAME sysmonitor enable 0) == 0 ] && exit 0
 
 	num=0
