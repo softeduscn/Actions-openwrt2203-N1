@@ -49,6 +49,9 @@ msgstr "未指定上传文件。"
 msgid "Path on Route:"
 msgstr "路由根目录："
 
+msgid "Log"
+msgstr "日志"
+
 msgid "Remove"
 msgstr "移除"
 
@@ -69,6 +72,9 @@ msgstr "将文件上传到'/tmp/upload/'"
 
 msgid "System Settings"
 msgstr "系统配置"
+
+msgid "WGusers"
+msgstr "用户"
 
 msgid "WireGuard Enable"
 msgstr "WireGuard 启用"
