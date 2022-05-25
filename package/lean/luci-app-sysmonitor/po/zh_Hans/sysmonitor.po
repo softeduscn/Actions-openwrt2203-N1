@@ -103,5 +103,14 @@ msgstr "BBR 启用"
 msgid "SmartDNS-AD Enable"
 msgstr "SmartDNS-AD 启用"
 
+msgid "VPN Enable"
+msgstr "VPN 启用"
+
+msgid "IPSEC Enable"
+msgstr "IPSEC 启用"
+
+msgid "PPTP Enable"
+msgstr "PPTP 启用"
+
 msgid "DDNS Monitor"
 msgstr "DDNS 守护"
