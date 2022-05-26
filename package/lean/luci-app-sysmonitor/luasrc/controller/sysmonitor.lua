@@ -44,7 +44,7 @@ end
 function action_ip_status()
 	luci.http.prepare_content("application/json")
 	luci.http.write_json({
-		ip_state = luci.sys.exec("/usr/share/sysmonitor/sysapp.sh getlocal")
+		ip_state = luci.sys.exec("/usr/share/sysmonitor/sysapp.sh getip")..' '..luci.sys.exec("/usr/share/sysmonitor/sysapp.sh getip6")
 	})
 end
 
