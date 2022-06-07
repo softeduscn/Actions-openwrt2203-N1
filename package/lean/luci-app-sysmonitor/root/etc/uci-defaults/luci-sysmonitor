@@ -9,12 +9,6 @@ EOF
 #sed -i '/smartdnsAD.sh/d' /etc/crontabs/root
 #echo '0 3 * * 0 /usr/share/sysmonitor/smartdnsAD.sh' >>/etc/crontabs/root
 
-cat > /etc/config/ttyd <<EOF
-config ttyd
-	option interface '@lan'
-	option command '/bin/login'
-EOF
-
 [ -f /etc/init.d/ddns ] && /etc/init.d/ddns stop
 [ -f /etc/init.d/ddns ] && /etc/init.d/ddns disable
 
