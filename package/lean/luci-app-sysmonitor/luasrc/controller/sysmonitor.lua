@@ -42,9 +42,10 @@ function get_users()
 end
 
 function action_ip_status()
+	ip = luci.sys.exec("/usr/share/sysmonitor/sysapp.sh getip")
 	luci.http.prepare_content("application/json")
 	luci.http.write_json({
-		ip_state = luci.sys.exec("/usr/share/sysmonitor/sysapp.sh getip").."<font color=9699cc>["..luci.sys.exec("/usr/share/sysmonitor/sysapp.sh getip6").."]</font>"
+		ip_state = ip..'<font color=9699cc> ['..luci.sys.exec("/usr/share/sysmonitor/sysapp.sh getip6")..'] </font><button class=button1><a href="http://'..ip..':7681" target="_blank" title="Open terminal">Open terminal</a></button>'
 	})
 end
 
