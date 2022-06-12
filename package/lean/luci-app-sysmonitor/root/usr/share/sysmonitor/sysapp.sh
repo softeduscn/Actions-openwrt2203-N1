@@ -89,7 +89,7 @@ pptp_users() {
 }
 
 wg_users() {
-file='/var/log/wg_user'
+file='/var/log/wg_users'
 /usr/bin/wg >$file
 m=$(sed -n '/peer/=' $file | sort -r -n )
 k=$(cat $file|wc -l)
@@ -125,7 +125,9 @@ do
 	fi
 	s=$n
 done
-cat $file|grep peer|wc -l
+users=$(cat $file|grep peer|wc -l)
+[ "$users" -le 1 ] && users='None'
+echo $users
 }
 
 wg() {
@@ -172,18 +174,24 @@ ad_switch() {
 }
 
 switch_vpn() {
-	if [ "$(ps -w|grep passwall|grep -v grep|wc -l)" == 0 ]; then
-		if [ -f "/etc/init.d/passwall" ]; then
-			uci set passwall.@global[0].enabled=1
-			uci commit passwall
-			[ -f "/etc/init.d/shadowsocksr" ] && /etc/init.d/shadowsocksr stop
-			/etc/init.d/passwall restart
+	if [ $(uci get sysmonitor.sysmonitor.vpn) == 0 ];  then
+		onoff_vpn
+	else
+		if [ "$(ps -w|grep passwall|grep -v grep|wc -l)" == 0 ]; then
+			if [ -f "/etc/init.d/passwall" ]; then
+				uci set passwall.@global[0].enabled=1
+				uci commit passwall
+				/etc/init.d/passwall restart &
+				echo "Passwall"
+			else
+				[ -f "/etc/init.d/shadowsocksr" ] && /etc/init.d/shadowsocksr restart &
+				echo "Shadowsocksr"
+			fi
+			
+		elif [ "$(ps -w|grep ssrplus|grep -v grep|wc -l)" == 0 ]; then
+			[ -f "/etc/init.d/shadowsocksr" ] && /etc/init.d/shadowsocksr restart &
+			echo "Shadowsocksr"
 		fi
-		echo "Passwall"
-	elif [ "$(ps -w|grep ssrplus|grep -v grep|wc -l)" == 0 ]; then
-		[ -f "/etc/init.d/passwall" ] && /etc/init.d/passwall stop
-		[ -f "/etc/init.d/shadowsocksr" ] && /etc/init.d/shadowsocksr restart
-		echo "Shadowsocksr"
 	fi
 }
 
@@ -195,10 +203,10 @@ onoff_vpn() {
 		if [ "$(ps |grep /etc/passwall |grep -v grep |wc -l)" -gt 0 ]; then
 			uci set passwall.@global[0].enabled=0
 			uci commit passwall
-			/etc/init.d/passwall stop
+			/etc/init.d/passwall stop &
 		fi
 		# Stop Shadowsocksr
-		[ "$(ps -w |grep ssrplus |grep -v grep |wc -l)" -gt 0 ] && /etc/init.d/shadowsocksr stop
+		[ "$(ps |grep ssrplus |grep -v grep |wc -l)" -gt 0 ] && /etc/init.d/shadowsocksr stop
 	else
 		if [ -f "/etc/init.d/passwall" ]; then
 			if [ "$(ps |grep /etc/passwall |grep -v grep |wc -l)" -lt 1 ]; then
