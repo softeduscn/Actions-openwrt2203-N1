@@ -33,24 +33,14 @@ ping_url() {
 	echo $status
 }
 
+ipold='888'
 while [ "1" == "1" ]; do #死循环
+	ipv6=$(ip -o -6 addr list br-lan | cut -d ' ' -f7 | cut -d'/' -f1 |head -n1)
+	[ ! "$ipold == $ipv6" ] && {
+		ipold=$ipv6
+		/usr/share/sysmonitor/sysapp.sh getip6
+	}
 
-	if [ $(uci get network.lan.ipaddr) == '192.168.1.111' ]; then
-		status=$(ping_url "192.168.1.110")
-		if [ "$status" == 0 ]; then
-			uci set network.lan.ipaddr='192.168.1.110'
-			uci commit network
-			ifup lan &
-		fi
-	fi
-	if [ $(uci get sysmonitor.sysmonitor.ddnsmonitor) == 1 ]; then
-		if [ -f "/etc/init.d/ddns" ]; then
-			[ $(ps -w|grep ddns|grep -v grep|wc -l) == 0 ] && /etc/init.d/ddns restart &
-		fi
-	fi
-
-	/usr/share/sysmonitor/sysapp.sh getip >/www/ip.html
-	/usr/share/sysmonitor/sysapp.sh getip6 >/www/ip6.html
 	[ $(uci_get_by_name $NAME sysmonitor enable 0) == 0 ] && exit 0
 
 	num=0
@@ -58,10 +48,14 @@ while [ "1" == "1" ]; do #死循环
 		sleep $sleep_unit
 		[ $(uci_get_by_name $NAME sysmonitor enable 0) == 0 ] && exit 0
 		let num=num+sleep_unit
-		if [ $num -ge 25 ]; then
-			[ $fw == 0 ] && /etc/init.d/firewall restart 2>/dev/null
-			fw=1			
+		if [ -f "/tmp/sysmonitor" ]; then
+			rm /tmp/sysmonitor
+			num=50
 		fi
+#		if [ $num -ge 25 ]; then
+#			[ $fw == 0 ] && /etc/init.d/firewall restart 2>/dev/null
+#			fw=1			
+#		fi
 	done
 done
 

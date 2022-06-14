@@ -19,7 +19,7 @@ wifi up
 uci set network.globals.ula_prefix=''
 #uci set network.@device[0].mtu='1472'
 uci set network.@device[0].stp='1'
-uci set network.lan.ipaddr='192.168.1.111'
+uci set network.lan.ipaddr='192.168.1.110'
 uci set network.lan.netmask='255.255.255.0'
 uci set network.lan.gateway='192.168.1.1'
 uci del_list network.lan.dns='192.168.1.1'

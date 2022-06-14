@@ -19,14 +19,7 @@ start()
 {
 	/etc/init.d/ttyd restart
 	sed -i "/coremark.sh/d" /etc/crontabs/root
-	cat /etc/config/dhcp | grep 127.0.0.1#5053 > /dev/null
-	if [ $? -eq 0 ];then
-		sed -i "/list server '127.0.0.1#5053'/d" /etc/config/dhcp
-		sed -i "/list server '127.0.0.1#5054'/d" /etc/config/dhcp
-		uci set dhcp.@dnsmasq[0].noresolv=0
-		uci commit dhcp
-		/etc/init.d/dnsmasq reload 2>/dev/null &
-	fi
+
 	if [ $(uci get sysmonitor.sysmonitor.bbr) == 1 ];  then
 		sysctl -w net.ipv4.tcp_congestion_control=bbr
 	else
@@ -41,6 +34,8 @@ start()
 		fi
 		/etc/init.d/smartdns restart &
 	fi
+	$APP_PATH/sysapp.sh getip
+	$APP_PATH/sysapp.sh getip6
 	set sysmonitor.sysmonitor.enable=1
 	set commit sysmonitor
 	$APP_PATH/sysmonitor.sh &

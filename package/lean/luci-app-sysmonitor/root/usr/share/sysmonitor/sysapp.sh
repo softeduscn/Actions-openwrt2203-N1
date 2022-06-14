@@ -238,11 +238,15 @@ switch_ipsecfw() {
 }
 
 getip() {
-	echo $(ip -o -4 addr list br-lan | cut -d ' ' -f7 | cut -d'/' -f1)
+	ip=$(ip -o -4 addr list br-lan | cut -d ' ' -f7 | cut -d'/' -f1)
+	echo &ip >/www/ip.html
+	echo $ip
 }
 
 getip6() {
-	echo $(ip -o -6 addr list br-lan | cut -d ' ' -f7 | cut -d'/' -f1 |head -n1)
+	ip=$(ip -o -6 addr list br-lan | cut -d ' ' -f7 | cut -d'/' -f1 |head -n1)
+	echo &ip >/www/ip6.html
+	echo $ip
 }
 
 
