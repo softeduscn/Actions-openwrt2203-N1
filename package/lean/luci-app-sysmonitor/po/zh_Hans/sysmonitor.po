@@ -85,14 +85,11 @@ msgstr "公网地址"
 msgid "Gateway Address"
 msgstr "网关地址"
 
-msgid "Home IP Address"
-msgstr "网络出口地址"
-
 msgid "VPN IP Address"
 msgstr "VPN 地址"
 
-msgid "IP for Home(192.168.1.1)"
-msgstr "光猫出口地址(如：192.168.1.1)"
+msgid "IP for gateway(192.168.1.1)"
+msgstr "网关地址(如：192.168.1.1)"
 
 msgid "IP for VPN Server(192.168.1.110)"
 msgstr "VPN服务器地址(如：192.168.1.110)"

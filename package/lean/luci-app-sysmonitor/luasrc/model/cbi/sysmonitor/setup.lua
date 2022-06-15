@@ -27,8 +27,8 @@ o=s:option(Flag,"ddnsmonitor", translate("DDNS Monitor"))
 o.rmempty=false
 end
 
-o = s:option(Value, "homeip", translate("Home IP Address"))
-o.description = translate("IP for Home(192.168.1.1)")
+o = s:option(Value, "gateway", translate("Gateway Address"))
+o.description = translate("IP for gateway(192.168.1.1)")
 o.datatype = "or(host)"
 o.rmempty = false
 

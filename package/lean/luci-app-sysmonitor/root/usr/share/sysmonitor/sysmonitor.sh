@@ -7,11 +7,6 @@ fi
 sleep_unit=1
 NAME=sysmonitor
 APP_PATH=/usr/share/$NAME
-fw=0
-
-uci del_list network.lan.dns='192.168.1.1'
-uci add_list network.lan.dns='192.168.1.1'
-uci commit network
 
 uci_get_by_name() {
 	local ret=$(uci get $1.$2.$3 2>/dev/null)
@@ -33,14 +28,20 @@ ping_url() {
 	echo $status
 }
 
+ip=$(uci_get_by_name $NAME sysmonitor gateway 0)
+uci set network.lan.gateway=$ip
+uci commit network
+ifup lan
+
 ipold='888'
 while [ "1" == "1" ]; do #死循环
 	ipv6=$(ip -o -6 addr list br-lan | cut -d ' ' -f7 | cut -d'/' -f1 |head -n1)
-	[ ! "$ipold == $ipv6" ] && {
+	[ ! $ipold == $ipv6 ] && {
+		d=$(date "+%Y-%m-%d %H:%M:%S")
+		echo $d": ip6="$ipv6 >> /var/log/sysmonitor.log
 		ipold=$ipv6
 		/usr/share/sysmonitor/sysapp.sh getip6
 	}
-
 	[ $(uci_get_by_name $NAME sysmonitor enable 0) == 0 ] && exit 0
 
 	num=0
@@ -52,10 +53,6 @@ while [ "1" == "1" ]; do #死循环
 			rm /tmp/sysmonitor
 			num=50
 		fi
-#		if [ $num -ge 25 ]; then
-#			[ $fw == 0 ] && /etc/init.d/firewall restart 2>/dev/null
-#			fw=1			
-#		fi
 	done
 done
 
