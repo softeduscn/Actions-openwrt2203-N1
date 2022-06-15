@@ -1,6 +1,6 @@
 
 config sysmonitor 'sysmonitor'
-	option homeip '192.168.1.1'
+	option gateway '192.168.1.1'
 	option bbr '1'
 	option smartdnsAD '0'
 	option enable '1'
