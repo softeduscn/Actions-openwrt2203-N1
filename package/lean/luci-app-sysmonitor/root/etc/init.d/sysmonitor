@@ -17,6 +17,7 @@ stop()
 }
 start()
 {
+	killall ttyd
 	/etc/init.d/ttyd restart
 	sed -i "/coremark.sh/d" /etc/crontabs/root
 
