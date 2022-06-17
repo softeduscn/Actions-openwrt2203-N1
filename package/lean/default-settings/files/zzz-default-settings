@@ -212,6 +212,13 @@ config service 'DynuOMV6'
 	option cacert '/etc/ssl/certs'
 EOF
 
+cat > /etc/config/ttyd <<EOF
+config ttyd
+	option command '/bin/login'
+	option debug '7'
+	option ipv6 '1'
+EOF
+
 sed -i 's/root:::0:99999:7:::/root:$1$zi2Q3mx.$FKnJLxOCjUxEX22lf3sXx0:19049:0:99999:7:::/g' /etc/shadow
 
 exit 0
