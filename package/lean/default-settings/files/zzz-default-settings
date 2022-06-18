@@ -63,6 +63,7 @@ uci set firewall.@defaults[0].flow_offloading_hw='1'
 uci set firewall.@zone[1].input='ACCEPT'
 uci commit firewall
 
+[ -f /etc/init.d/ddns ] && {
 cat > /etc/config/ddns <<EOF
 config ddns 'global'
 	option ddns_dateformat '%F %R'
@@ -211,14 +212,16 @@ config service 'DynuOMV6'
 	option use_https '1'
 	option cacert '/etc/ssl/certs'
 EOF
+}
 
+[ -f /etc/init.d/ttyd ] && {
 cat > /etc/config/ttyd <<EOF
 config ttyd
 	option command '/bin/login'
 	option debug '7'
 	option ipv6 '1'
 EOF
+}
 
 sed -i 's/root:::0:99999:7:::/root:$1$zi2Q3mx.$FKnJLxOCjUxEX22lf3sXx0:19049:0:99999:7:::/g' /etc/shadow
-
 exit 0
