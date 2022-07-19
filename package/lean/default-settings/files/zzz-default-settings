@@ -74,6 +74,15 @@ uci set firewall.@rule[7].dest='*'
 uci set firewall.@rule[8].dest='*'
 uci commit firewall
 
+cat >>/etc/config/firewall <<EOF
+config rule
+	option family 'ipv6'
+	option src 'lan'
+	option target 'ACCEPT'
+	option name 'Allow-IPV6-forward'
+	option dest '*'
+EOF
+
 [ -f /etc/init.d/ddns ] && {
 cat > /etc/config/ddns <<EOF
 config ddns 'global'
