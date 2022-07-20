@@ -105,7 +105,8 @@ jobs:
         mkdir $kout
         wget -c $kpath$kversion'/'$kboot -O $kout'/'$kboot
         wget -c $kpath$kversion'/'$kmod -O $kout'/'$kmod
-        wget -c $kpath$kversion'/'$kdbt -O $kout'/'$kdbt  
+        wget -c $kpath$kversion'/'$kdbt -O $kout'/'$kdbt
+        sed -i s/'default LIBCURL_WOLFSSL'/'default LIBCURL_OPENSSL'/ openwrt/feeds/packages/net/curl/Config.in
         rm -rf openwrt/feeds/packages/net/v2raya
         rm -rf openwrt/feeds/packages/net/trojan-go
         rm -rf openwrt/feeds/packages/net/xray-core
