@@ -97,8 +97,8 @@ jobs:
         chmod +x $DIY_P2_SH
         kpath='https://raw.githubusercontent.com/breakings/OpenWrt/master/opt/kernel/'
         kout='opt/openwrt_packit/kernel'
-        kversion='5.15.55'
-        krelease='74+o'
+        kversion='5.15.56'
+        krelease='75+o'
         kboot='boot-'$kversion'-flippy-'$krelease'.tar.gz'
         kmod='modules-'$kversion'-flippy-'$krelease'.tar.gz'
         kdbt='dtb-amlogic-'$kversion'-flippy-'$krelease'.tar.gz'
@@ -162,8 +162,8 @@ jobs:
             sha256=$(sudo sha256sum *)
             echo "FIRMWARE_N1=$PWD" >> $GITHUB_ENV
             cd ../
-            echo $sha256 > sha256sum
-            sudo cp sha256sum $x
+            echo $sha256 > sha256sums
+            sudo cp sha256sums $x
             sudo cp *-rootfs.tar.gz $x
         done
 
