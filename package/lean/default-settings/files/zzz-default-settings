@@ -90,6 +90,11 @@ uci commit firewall
 
 cat >>/etc/config/firewall <<EOF
 config rule
+	option name 'Allow-all'
+	option src 'lan'
+	option target 'ACCEPT'
+
+config rule
 	option src 'lan'
 	option dest '*'
 	option target 'ACCEPT'
