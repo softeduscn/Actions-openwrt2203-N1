@@ -60,7 +60,21 @@ uci del_list firewall.@zone[0].network='lan6'
 uci add_list firewall.@zone[0].network='lan6'
 uci set firewall.@defaults[0].flow_offloading='1'
 uci set firewall.@defaults[0].flow_offloading_hw='0'
+uci set firewall.@defaults[0].input='ACCEPT'
+uci set firewall.@defaults[0].output='ACCEPT'
+uci set firewall.@defaults[0].forward='ACCEPT'
+
+uci set firewall.@zone[0].input='ACCEPT'
+uci set firewall.@zone[0].output='ACCEPT'
+uci set firewall.@zone[0].forward='ACCEPT'
+uci set firewall.@zone[0].masq='0'
+uci set firewall.@zone[0].mtu_fix='0'
 uci set firewall.@zone[1].input='ACCEPT'
+uci set firewall.@zone[1].output='ACCEPT'
+uci set firewall.@zone[1].forward='ACCEPT'
+uci set firewall.@zone[1].masq='1'
+uci set firewall.@zone[1].mtu_fix='1'
+
 uci set firewall.@rule[0].src='lan'
 uci set firewall.@rule[1].src='lan'
 uci set firewall.@rule[2].src='lan'
@@ -76,18 +90,16 @@ uci commit firewall
 
 cat >>/etc/config/firewall <<EOF
 config rule
-	option family 'ipv6'
 	option src 'lan'
 	option dest '*'
 	option target 'ACCEPT'
-	option name 'Allow-IPV6-in'
+	option name 'Allow-in'
 
 config rule
-	option family 'ipv6'
 	option src '*'
 	option dest 'lan'
 	option target 'ACCEPT'
-	option name 'Allow-IPV6-out'
+	option name 'Allow-out'
 EOF
 
 [ -f /etc/init.d/ddns ] && {
