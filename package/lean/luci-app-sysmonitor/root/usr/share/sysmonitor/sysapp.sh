@@ -54,7 +54,7 @@ ssr() {
 	[ -f "/etc/init.d/passwall" ] && ssrp='Passwall '
 	if [ ! "$ssr" == '' ]; then
 		ssrstatus='Stopped'
-		[ "$(ps -w |grep ssrplus/bin/ssr-|grep -v grep |wc -l)" -gt 0 ] && ssrstatus='Running'
+		[ "$(ps -w |grep /etc/ssrplus|grep -v grep |wc -l)" -gt 0 ] && ssrstatus='Running'
 	fi
 	if [ ! "$ssrp" == '' ]; then
 		ssrpstatus='Stopped'
@@ -135,7 +135,7 @@ do
 	fi
 	s=$n
 done
-users=$(cat $file|grep peer|wc -l)
+users=$(cat $file|sed '/GWLcAE1Of.*$/d'|grep peer|wc -l)
 [ "$users" -eq 0 ] && users='None'
 echo $users
 }
@@ -198,7 +198,7 @@ switch_vpn() {
 				echo "Shadowsocksr"
 			fi
 			
-		elif [ "$(ps -w|grep ssrplus/bin/ssr-|grep -v grep|wc -l)" == 0 ]; then
+		elif [ "$(ps -w|grep /etc/ssrplus|grep -v grep|wc -l)" == 0 ]; then
 			[ -f "/etc/init.d/shadowsocksr" ] && /etc/init.d/shadowsocksr restart &
 			echo "Shadowsocksr"
 		fi
@@ -207,7 +207,7 @@ switch_vpn() {
 
 onoff_vpn() {
 	ssr=$(ps |grep /etc/passwall |grep -v grep |wc -l)
-	[ $ssr -lt 1 ] && ssr=$(ps -w |grep ssrplus/bin/ssr-|grep -v grep |wc -l)
+	[ $ssr -lt 1 ] && ssr=$(ps -w |grep /etc/ssrplus|grep -v grep |wc -l)
 	if [ $ssr -gt 0 ];  then
 		# Stop Passwall
 		if [ "$(ps |grep /etc/passwall |grep -v grep |wc -l)" -gt 0 ]; then
@@ -216,7 +216,7 @@ onoff_vpn() {
 			/etc/init.d/passwall stop &
 		fi
 		# Stop Shadowsocksr
-		[ "$(ps |grep ssrplus/bin/ssr-|grep -v grep |wc -l)" -gt 0 ] && /etc/init.d/shadowsocksr stop
+		[ "$(ps |grep /etc/ssrplus|grep -v grep |wc -l)" -gt 0 ] && /etc/init.d/shadowsocksr stop
 	else
 		if [ -f "/etc/init.d/passwall" ]; then
 			if [ "$(ps |grep /etc/passwall |grep -v grep |wc -l)" -lt 1 ]; then
@@ -227,7 +227,7 @@ onoff_vpn() {
 			fi
 			fi			
 		elif [ -f "/etc/init.d/shadowsocksr" ]; then
-			if [ "$(ps |grep ssrplus/bin/ssr-|grep -v grep |wc -l)" -lt 1 ]; then
+			if [ "$(ps |grep /etc/ssrplus|grep -v grep |wc -l)" -lt 1 ]; then
 				/etc/init.d/shadowsocksr restart &
 			fi
 		else
@@ -259,7 +259,22 @@ getip6() {
 	echo $ip
 }
 
-smartdns() {
+getgateway() {
+	uci get network.lan.gateway
+}
+
+getdns() {
+	uci get network.lan.dns
+}
+
+getvpn() {
+	vpn=''
+	[ "$(ps |grep /etc/passwall |grep -v grep |wc -l)" != 0 ] && vpn='Passwall'
+	[ "$(ps |grep /etc/ssrplus|grep -v grep |wc -l)" != 0 ] && vpn='Shadowsocksr'
+	echo $vpn	
+}
+
+smartdns_cache() {
 	[ -f /tmp/smartdns.cache ] && rm /tmp/smartdns.cache
 	[ $(ps |grep smartdns|grep -v grep|wc -l) -gt 0 ] && /etc/init.d/smartdns restart
 }
@@ -287,34 +302,32 @@ start_smartdns() {
 
 set_smartdns() {
 	if [ -f "/etc/init.d/smartdns" ]; then
-		if [ $(uci get sysmonitor.sysmonitor.smartdnsAD) == 1 ];  then
-			sed -i s/".*$conf-file.*$"/"conf-file \/etc\/smartdns\/anti-ad-for-smartdns.conf"/ /etc/smartdns/custom.conf
-		else
-			sed -i s/".*$conf-file.*$"/"#conf-file \/etc\/smartdns\/anti-ad-for-smartdns.conf"/ /etc/smartdns/custom.conf	
-		fi
+		sed -i s/"#conf-file"/"conf-file"/ /etc/smartdns/custom.conf
+		[ $(uci get sysmonitor.sysmonitor.smartdnsAD) == 0 ] && sed -i s/"conf-file"/"#conf-file"/ /etc/smartdns/custom.conf
 		[ -f /tmp/smartdns.cache ] && rm /tmp/smartdns.cache
 		if [ $(uci get sysmonitor.sysmonitor.smartdns) == 1 ];  then
 			port='5335'
-			sed -i '/address/d' /etc/smartdns/custom.conf
-			echo "address /NAS/192.168.1.8" >> /etc/smartdns/custom.conf
+		#	sed -i '/address/d' /etc/smartdns/custom.conf
+		#	echo "address /NAS/192.168.1.220" >> /etc/smartdns/custom.conf
 			if [ -f "/etc/init.d/shadowsocksr" ]; then
 				[ "$(uci get shadowsocksr.@global[0].pdnsd_enable)" -ne 0 ] && port='8653'		
 			fi
 			[ -f "/etc/init.d/passwall" ] && port='8653'	
 			start_smartdns $port
 		else
-			vpn=$(ps |grep ssrplus/bin/ssr-|grep -v grep|wc -l)
-			[ "$vpn" == 0 ] && vpn=$(ps |grep /etc/passwall|grep -v grep|wc -l)
-			if [ "$vpn" == 0 ]; then
-				touch /tmp/smartdns_stop
-			else
+			if [ "$(ps |grep /etc/ssrplus|grep -v grep|wc -l)" != 0 ]; then
 				if [ "$(uci get shadowsocksr.@global[0].pdnsd_enable)" -ne 0 ]; then
 					touch /tmp/smartdns_stop
 				else
 					start_smartdns '5335'
 				fi
-				if [ "$(uci get passwall.@global[0].dns_shunt)" == 'smartdns' ]; then
-					start_smartdns '8653'
+			else
+				if [ "$(ps |grep /etc/passwall|grep -v grep|wc -l)" !=0 ]; then
+					if [ "$(uci get passwall.@global[0].dns_shunt)" == 'smartdns' ]; then
+						start_smartdns '8653'
+					else
+						touch /tmp/smartdns_stop
+					fi
 				else
 					touch /tmp/smartdns_stop
 				fi
@@ -322,11 +335,6 @@ set_smartdns() {
 			if [ -f "/tmp/smartdns_stop" ]; then
 				rm /tmp/smartdns_stop
 				/etc/init.d/smartdns stop >/dev/null 2>&1
-#				uci del dhcp.@dnsmasq[0].server
-#				uci set dhcp.@dnsmasq[0].port=''
-#				uci set dhcp.@dnsmasq[0].noresolv=0
-#				uci commit dhcp
-#				/etc/init.d/dnsmasq restart
 			fi
 
 		fi
@@ -340,15 +348,16 @@ p)
 	uci set sysmonitor.sysmonitor.vpns=0		
 	uci commit sysmonitor
 	[ -f /etc/init.d/shadowsocksr ] && /etc/init.d/shadowsocksr stop
+	[ "$(uci get passwall.@global[0].dns_shunt)" == 'smartdns' ] && start_smartdns '8653'
 	;;
 s)
 	[ ! $(uci get shadowsocksr.@global[0].global_server) == 'nil' ] && uci set sysmonitor.sysmonitor.vpns=1
 	uci set sysmonitor.sysmonitor.vpnp=0
 	uci commit sysmonitor
 	[ -f /etc/init.d/passwall ] && /etc/init.d/passwall stop
+	[ "$(uci get shadowsocksr.@global[0].pdnsd_enable)" == 0 ] && start_smartdns '5335'
 	;;
 esac
-	set_smartdns
 }
 
 passwall() {
@@ -376,12 +385,12 @@ shadowsocksr() {
 vpn() {
 	if [ $(uci get sysmonitor.sysmonitor.vpns) == 1 ];  then
 		[ -f "/tmp/set_smartdns" ] && rm /tmp/set_smartdns
-		if [ $(ps |grep ssrplus/bin/ssr-|grep -v grep|wc -l) -eq 0 ]; then
+		if [ $(ps |grep /etc/ssrplus|grep -v grep|wc -l) -eq 0 ]; then
 			[ -f "/etc/init.d/shadowsocksr" ] && /etc/init.d/shadowsocksr start &
 		fi
 	else
 		touch /tmp/set_smartdns
-		[ $(ps |grep ssrplus/bin/ssr-|grep -v grep|wc -l) -gt 0 ] && /etc/init.d/shadowsocksr stop &
+		[ $(ps |grep /etc/ssrplus|grep -v grep|wc -l) -gt 0 ] && /etc/init.d/shadowsocksr stop &
 	fi
 	if [ $(uci get sysmonitor.sysmonitor.vpnp) == 1 ];  then
 		[ -f "/tmp/set_smartdns" ] && rm /tmp/set_smartdns
@@ -398,9 +407,34 @@ vpn() {
 	fi
 }
 
+setdns() {
+	dnslist=$(uci get sysmonitor.sysmonitor.dns)
+	if [ "$dnslist" != "$(uci get network.lan.dns)" ]; then
+		d=$(date "+%Y-%m-%d %H:%M:%S")
+		echo $d": set dns:"$dnslist >> /var/log/sysmonitor.log
+		uci del network.lan.dns
+		uci del network.wan.dns
+		uci del network.wifi.dns
+		for n in $dnslist
+		do 		
+			uci add_list network.lan.dns=$n
+			uci add_list network.wan.dns=$n
+			uci add_list network.wifi.dns=$n
+		done
+		uci commit network
+		ifup lan
+		ifup wan
+		ifup wan6
+		/etc/init.d/odhcpd restart
+	fi
+}
+
 arg1=$1
 shift
 case $arg1 in
+setdns)
+	setdns
+	;;
 selvpn)
 	selvpn $1
 	;;
@@ -410,8 +444,8 @@ set_smartdns)
 service_smartdns)
 	service_smartdns
 	;;
-smartdns)
-	smartdns
+smartdns_cache)
+	smartdns_cache
 	;;
 passwall)
 	passwall
@@ -424,6 +458,15 @@ getip)
 	;;
 getip6)
 	getip6
+	;;
+getgateway)
+	getgateway
+	;;
+getdns)
+	getdns
+	;;
+getvpn)
+	getvpn
 	;;
 agh)
 	agh

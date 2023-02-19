@@ -70,5 +70,12 @@ o.datatype = "or(host)"
 o.rmempty = false
 --]]
 
+o = s:option(DynamicList, "dns", translate("DNS List"))
+o.datatype = "or(host)"
+o.rmempty = false
+
+o = s:option(Value, "time", translate("Check time"))
+o.rmempty = false
+
 return m, n
 

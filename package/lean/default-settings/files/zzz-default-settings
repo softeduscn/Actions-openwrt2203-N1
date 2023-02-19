@@ -9,8 +9,13 @@ uci set system.@system[0].zonename=Asia/Shanghai
 uci commit system
 
 uci set wireless.radio0.channel='auto'
+uci set wireless.radio0.mu_beamformer='1'
+uci set wireless.radio0.channel='161'
+uci del wireless.radio0.country
 uci set wireless.default_radio0.ssid='VAION'
 uci set wireless.default_radio0.key='sonyvaiotz13w'
+uci set wireless.default_radio0.network='wifi'
+uci set wireless.default_radio0.encryption='psk2'
 uci set wireless.radio0.disabled='1'
 uci set wireless.default_radio0.disabled='1'
 uci commit wireless
@@ -19,22 +24,74 @@ wifi up
 uci set network.globals.ula_prefix=''
 #uci set network.@device[0].mtu='1472'
 #uci set network.@device[0].stp='1'
+uci set network.@device[0].acceptlocal='1'
 uci set network.lan.ipaddr='192.168.1.110'
 uci set network.lan.netmask='255.255.255.0'
 uci set network.lan.gateway='192.168.1.1'
-uci del_list network.lan.dns='192.168.1.1'
+uci del network.lan.dns
 uci add_list network.lan.dns='192.168.1.1'
 uci set network.lan.ip6assign=''
 uci commit network
 
-cat /etc/config/network | grep lan6 > /dev/null
+cat /etc/config/network | grep wan6 > /dev/null
 if [ $? -ne 0 ];then
 cat >>/etc/config/network <<EOF
-config interface 'lan6'
+config interface 'wan6'
 	option proto 'dhcpv6'
 	option device 'br-lan'
 	option reqaddress 'try'
 	option reqprefix 'auto'
+
+config interface 'wifi'
+	option proto 'static'
+	option ipaddr '192.168.88.1'
+	option netmask '255.255.255.0'
+	option type 'bridge'
+	option device 'wlan0'
+	list dns '119.29.29.29'
+	list dns '223.5.5.5'
+	list dns '114.114.114.114'
+	option ip6assign '64'
+
+config interface 'wan'
+	option proto 'static'
+	option ipaddr '192.168.1.118'
+	option netmask '255.255.255.0'
+	option gateway '192.168.1.1'
+	option device 'br-lan'
+	list dns '192.168.1.1'
+
+config device
+	option name 'wghome'
+	option acceptlocal '1'
+
+config device
+	option name 'eth0'
+	option acceptlocal '1'
+
+config interface 'wghome'
+	option proto 'wireguard'
+	option private_key 'IGMTUNeDCUoJLpS96GxGfYmIWp3fjMiQHNquop953HA='
+	list addresses '192.168.9.118'
+	option listen_port '58888'
+
+config wireguard_wghome
+	option public_key 'RuCdaOHKPDf2c2kihx2dzBhEDKZnbnhP1N4aUBkzw3A='
+	option route_allowed_ips '1'
+	list allowed_ips '192.168.9.11'
+	option description 'Iphone8Plus'
+
+config wireguard_wghome
+	option public_key 'HkRSRzDMks74AmFQlnByouVNR6E/o5I+j033QqF1UyI='
+	option route_allowed_ips '1'
+	list allowed_ips '192.168.9.12'
+	option description 'Iphone7'
+
+config wireguard_wghome
+	option public_key 'ql9g9ngGQMq9cyBaun5QjnyROyh7Cu4zJ9eZwFM6UGw='
+	option route_allowed_ips '1'
+	list allowed_ips '192.168.9.13'
+	option description 'Iphone8'
 EOF
 fi
 
@@ -44,31 +101,48 @@ uci set dhcp.lan.ra=''
 uci set dhcp.lan.dhcpv4=''
 uci set dhcp.lan.dhcpv6=''
 uci set dhcp.lan.ignore='1'
-uci set dhcp.@dnsmasq[0].localservice='0'
-uci set dhcp.@dnsmasq[0].domainneeded='0'
+#uci set dhcp.@dnsmasq[0].localservice='0'
+#uci set dhcp.@dnsmasq[0].domainneeded='0'
 uci commit dhcp
 
-cat /etc/config/dhcp | grep lan6 > /dev/null
+cat /etc/config/dhcp | grep wan6 > /dev/null
 if [ $? -ne 0 ];then
 cat >> /etc/config/dhcp <<EOF
-config dhcp 'lan6'
-	option interface 'lan6'
+config dhcp 'wan6'
+	option interface 'wan6'
 	option ignore '1'
-	list ra_flags 'none'
+	option master '1'
+	option ra 'relay'
+	option dhcpv6 'relay'
+	option ndp 'relay'
+
+config dhcp 'wifi'
+	option interface 'wifi'
+	option start '100'
+	option limit '150'
+	option leasetime '12h'
+	option ra 'relay'
+	option dhcpv6 'relay'
+	option ndp 'relay'
+	list dhcp_option '44,192.168.1.220'
 
 config domain
 	option name 'NAS'
-	option ip '192.168.1.8'
+	option ip '192.168.1.220'
+
+config domain
+	option name 'VPN'
+	option ip '192.168.1.110'
 EOF
 fi
 
-uci del_list firewall.@zone[0].network='lan6'
-uci add_list firewall.@zone[0].network='lan6'
-uci set firewall.@defaults[0].flow_offloading='1'
+uci set firewall.@zone[0].network='lan'
+uci set firewall.@defaults[0].synflood_protect='0'
+uci set firewall.@defaults[0].flow_offloading='0'
 uci set firewall.@defaults[0].flow_offloading_hw='0'
 uci set firewall.@defaults[0].input='ACCEPT'
 uci set firewall.@defaults[0].output='ACCEPT'
-uci set firewall.@defaults[0].forward='ACCEPT'
+uci set firewall.@defaults[0].forward='REJECT'
 
 uci set firewall.@zone[0].input='ACCEPT'
 uci set firewall.@zone[0].output='ACCEPT'
@@ -77,57 +151,23 @@ uci set firewall.@zone[0].masq='0'
 uci set firewall.@zone[0].mtu_fix='0'
 uci set firewall.@zone[1].input='ACCEPT'
 uci set firewall.@zone[1].output='ACCEPT'
-uci set firewall.@zone[1].forward='ACCEPT'
-uci set firewall.@zone[1].masq='0'
-uci set firewall.@zone[1].mtu_fix='0'
-
-uci set firewall.@rule[0].src='lan'
-uci set firewall.@rule[1].src='lan'
-uci set firewall.@rule[2].src='lan'
-uci set firewall.@rule[3].src='lan'
-uci set firewall.@rule[4].src='lan'
-uci set firewall.@rule[5].src='lan'
-uci set firewall.@rule[6].src='lan'
-uci set firewall.@rule[7].src='lan'
-uci set firewall.@rule[8].src='lan'
-uci set firewall.@rule[7].dest='*'
-uci set firewall.@rule[8].dest='*'
+uci set firewall.@zone[1].forward='REJECT'
+uci set firewall.@zone[1].masq='1'
+uci set firewall.@zone[1].mtu_fix='1'
+uci set firewall.@zone[1].network='wan'
+uci add_list firewall.@zone[1].network='wan6'
 uci commit firewall
 
-cat /etc/config/network | grep wghome > /dev/null
-if [ $? -ne 0 ];then
-cat >> /etc/config/network <<EOF
-config interface 'wghome'
-	option proto 'wireguard'
-	option private_key 'CEhlQo1JZz/QcFjjYDq14LgTXbsSgVlPq7bXa0IBHlg='
-	list addresses '192.168.9.110/24'
-	list addresses '192.168.8.110/24'
-	list addresses '192.168.7.110/24'
-	list addresses '192.168.6.110/24'
-	option listen_port '58888'
-
-config wireguard_wghome
-	option public_key 'RuCdaOHKPDf2c2kihx2dzBhEDKZnbnhP1N4aUBkzw3A='
-	option route_allowed_ips '1'
-	list allowed_ips '192.168.8.0/24'
-	option description 'Iphone8Plus'
-
-config wireguard_wghome
-	option public_key 'HkRSRzDMks74AmFQlnByouVNR6E/o5I+j033QqF1UyI='
-	option route_allowed_ips '1'
-	list allowed_ips '192.168.7.0/24'
-	option description 'Iphone6'
-
-config wireguard_wghome
-	option public_key 'ql9g9ngGQMq9cyBaun5QjnyROyh7Cu4zJ9eZwFM6UGw='
-	option route_allowed_ips '1'
-	list allowed_ips '192.168.6.0/24'
-	option description 'Iphone8'
-EOF
-fi
 cat /etc/config/firewall | grep wghome > /dev/null
 if [ $? -ne 0 ];then
 cat >> /etc/config/firewall <<EOF
+config zone
+	option name 'wifi'
+	option input 'ACCEPT'
+	option output 'ACCEPT'
+	option forward 'ACCEPT'
+	list network 'wifi'
+
 config zone
 	option name 'wghome'
 	option input 'ACCEPT'
@@ -135,18 +175,64 @@ config zone
 	option forward 'ACCEPT'
 	list network 'wghome'
 
-config forwarding
-	option src 'wghome'
-	option dest 'lan'
-
 config rule
 	option name 'Wireguard'
-	option src 'lan'
+	option src 'wan'
 	option src_port '58888'
 	option dest_port '58888'
 	option target 'ACCEPT'
+
+config forwarding
+	option src 'wifi'
+	option dest 'wan'
+
+config forwarding
+	option src 'wghome'
+	option dest 'wan'
+
+config nat
+	option name 'Allow-119'
+	option src 'lan'
+	option target 'ACCEPT'
+	list proto 'all'
+	option src_ip '192.168.1.119'
+
+config nat
+	option name 'Allow-120'
+	option src 'lan'
+	option target 'ACCEPT'
+	list proto 'all'
+	option src_ip '192.168.1.120'
 EOF
 fi
+
+[ -f /etc/lighttpd/lighttpd.conf ] && {
+file='/etc/lighttpd/lighttpd.conf'
+sed -i  's|".php", ".pl", ".fcgi"|".php", ".pl", ".fcgi", ".lua"|' $file
+sed -i s/':80'/':8080'/ /etc/config/uhttpd
+#sed -i  's|#server.port|server.port|' $file
+}
+
+[ -f /etc/lighttpd/conf.d/30-cgi.conf ] && {
+sed -i '/".cgi" => "\/usr\/bin\/perl"/i\                               ".lua" => "\/usr\/bin\/lua",' /etc/lighttpd/conf.d/30-cgi.conf
+sed -i '/".cgi" => "\/usr\/bin\/perl"/i\                               ".php" => "\/usr\/bin\/php-cgi",' /etc/lighttpd/conf.d/30-cgi.conf
+cat >> /etc/lighttpd/conf.d/30-cgi.conf <<EOF
+cgi.assign += ( "/cgi-bin/luci" => "",
+                "/cgi-bin/cgi-backup" => "",
+                "/cgi-bin/cgi-download" => "",
+                "/cgi-bin/cgi-exec" => "",
+                "/cgi-bin/cgi-upload" => "" )
+				
+server.username := ""
+server.groupname := ""
+EOF
+
+cat > /www/.getvpn.php <<EOF
+<?php
+echo shell_exec('/usr/share/sysmonitor/sysapp.sh getvpn');
+?>
+EOF
+}
 
 [ -f /etc/init.d/ddns ] && {
 /etc/init.d/ddns enable
@@ -295,7 +381,7 @@ config service 'DynuNAS6'
 	option force_unit 'minutes'
 	option retry_unit 'seconds'
 	option ip_source 'web'
-	option ip_url 'http://192.168.1.8:8080/ip6.html'
+	option ip_url 'http://192.168.1.220:8080/ip6.html'
 	option interface 'br-lan'
 	option bind_network 'lan'
 	option lookup_host 'nascn.ddnsfree.com'
@@ -321,8 +407,6 @@ config service 'DynuSSR6'
 	option force_dnstcp '1'
 EOF
 }
-EOF
-}
 
 [ -f /etc/init.d/ttyd ] && {
 cat > /etc/config/ttyd <<EOF
@@ -332,6 +416,9 @@ config ttyd
 	option ipv6 '1'
 EOF
 }
+
+#sed -i '/iptables -t nat/d' /etc/firewall.user
+#echo "iptables -t nat -I POSTROUTING -j MASQUERADE" >> /etc/firewall.user
 
 sed -i 's/root.*$/root:$1$TADtMues$II9qrw8S7H3hYtJASm0tw.:19059:0:99999:7:::/g' /etc/shadow
 exit 0

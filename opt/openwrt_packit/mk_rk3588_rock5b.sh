@@ -10,9 +10,11 @@ SOC=rk3588
 BOARD=rock5b
 SUBVER=$1
 
-# lock the kernel version
-KERNEL_VERSION=5.10.123-rk3588-flippy
-LOCK_KERNEL=${KERNEL_VERSION}
+if [ -n "$RK3588_KERNEL_VERSION" ];then
+    # lock the kernel version
+    KERNEL_VERSION=$RK3588_KERNEL_VERSION
+    LOCK_KERNEL=${KERNEL_VERSION}
+fi
 
 # Kernel image sources
 ###################################################################
@@ -35,7 +37,6 @@ TGT_IMG="${WORK_DIR}/openwrt_${SOC}_${BOARD}_${OPENWRT_VER}_k${KERNEL_VERSION}${
 
 # patches、scripts
 ####################################################################
-REGULATORY_DB="${PWD}/files/regulatory.db.tar.gz"
 CPUSTAT_SCRIPT="${PWD}/files/cpustat"
 CPUSTAT_SCRIPT_PY="${PWD}/files/cpustat.py"
 INDEX_PATCH_HOME="${PWD}/files/index.html.patches"
@@ -100,12 +101,12 @@ P7ZIP="${PWD}/files/7z"
 # 20211217 add
 DDBR="${PWD}/files/openwrt-ddbr"
 # 20220225 add
-SSH_CIPHERS="aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr,chacha20-poly1305@openssh.com"
-SSHD_CIPHERS="aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr"
+SSH_CIPHERS="aes256-gcm@openssh.com,aes128-gcm@openssh.com,chacha20-poly1305@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr"
+SSHD_CIPHERS="aes256-gcm@openssh.com,aes128-gcm@openssh.com,chacha20-poly1305@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr"
 # 20220906 add
 PWM_FAN="${PWD}/files/rk3588/rock5b/pwm-fan.pl"
 # 20221001 add
-MODULES_HOME="${PWD}/files/rk3328/modules.d"
+MODULES_HOME="${PWD}/files/rk3588/modules.d"
 ####################################################################
 
 check_depends

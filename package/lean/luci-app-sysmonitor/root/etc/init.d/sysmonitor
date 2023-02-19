@@ -12,15 +12,17 @@ APP_PATH=/usr/share/$NAME
 
 stop()
 {
-	set sysmonitor.sysmonitor.enable=0
-	set commit sysmonitor
+	uci set sysmonitor.sysmonitor.enable=0
+	uci commit sysmonitor
 }
 start()
 {
+	uci set sysmonitor.sysmonitor.enable=1
+	uci commit sysmonitor
 	sed -i "/coremark.sh/d" /etc/crontabs/root
 	$APP_PATH/sysapp.sh vpn
 	$APP_PATH/sysapp.sh getip
-	set sysmonitor.sysmonitor.enable=1
-	set commit sysmonitor
+	$APP_PATH/sysapp.sh setdns
+	$APP_PATH/sysapp.sh set_smartdns
 	$APP_PATH/sysmonitor.sh &
 }

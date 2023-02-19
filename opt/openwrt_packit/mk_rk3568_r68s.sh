@@ -5,6 +5,13 @@ source make.env
 source public_funcs
 init_work_env
 
+# 默认是否开启软件FLOWOFFLOAD
+SW_FLOWOFFLOAD=0
+# 默认是否开启硬件FLOWOFFLOAD
+HW_FLOWOFFLOAD=0
+# 默认是否开启SFE
+SFE_FLOW=1
+
 PLATFORM=rockchip
 SOC=rk3568
 BOARD=r68s
@@ -31,7 +38,6 @@ TGT_IMG="${WORK_DIR}/openwrt_${SOC}_${BOARD}_${OPENWRT_VER}_k${KERNEL_VERSION}${
 
 # patches、scripts
 ####################################################################
-REGULATORY_DB="${PWD}/files/regulatory.db.tar.gz"
 CPUSTAT_SCRIPT="${PWD}/files/cpustat"
 CPUSTAT_SCRIPT_PY="${PWD}/files/cpustat.py"
 INDEX_PATCH_HOME="${PWD}/files/index.html.patches"
