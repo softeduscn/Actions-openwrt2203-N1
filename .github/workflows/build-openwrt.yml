@@ -95,17 +95,14 @@ jobs:
         [ -e files ] && mv files openwrt/files
         [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
         chmod +x $DIY_P2_SH
-        kpath='https://raw.githubusercontent.com/breakings/OpenWrt/master/opt/kernel/'
-        kout='opt/openwrt_packit/kernel'
-        kversion='5.10.174'
+        kpath='https://github.com/breakings/OpenWrt/releases/download/kernel_stable/'
+        kout='opt/openwrt_packit'
+        kversion='5.10.177'
         krelease='82+'
-        kboot='boot-'$kversion'-flippy-'$krelease'.tar.gz'
-        kmod='modules-'$kversion'-flippy-'$krelease'.tar.gz'
-        kdbt='dtb-amlogic-'$kversion'-flippy-'$krelease'.tar.gz'
         mkdir $kout
-        wget -c $kpath$kversion'/'$kboot -O $kout'/'$kboot
-        wget -c $kpath$kversion'/'$kmod -O $kout'/'$kmod
-        wget -c $kpath$kversion'/'$kdbt -O $kout'/'$kdbt
+        wget -c $kpath$kversion'.tar.gz' -O $kout
+        tar -xf $kout'/'$kversion'.tar.gz' -C $kout
+        mv $kout'/'$kversion $kout'/kernel'
         sed -i s/'default LIBCURL_WOLFSSL'/'default LIBCURL_OPENSSL'/ openwrt/feeds/packages/net/curl/Config.in
         rm -rf openwrt/feeds/packages/net/v2raya
         rm -rf openwrt/feeds/packages/net/trojan-go
