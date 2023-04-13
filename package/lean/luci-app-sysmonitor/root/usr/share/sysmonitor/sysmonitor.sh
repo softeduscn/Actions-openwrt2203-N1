@@ -1,6 +1,6 @@
 #!/bin/bash
 
-[ "$(ps | grep sysmonitor.sh | grep -v grep | wc -l)" -gt 2 ] && exit
+[ -f /tmp/sysmonitor.run ] && exit
 
 sleep_unit=1
 NAME=sysmonitor
@@ -48,6 +48,7 @@ d=$(date "+%Y-%m-%d %H:%M:%S")
 echo $d": Sysmonitor up now." >> /var/log/sysmonitor.log
 echo $d": gateway="$gateway >> /var/log/sysmonitor.log
 
+touch /tmp/sysmonitor.run
 while [ "1" == "1" ]; do #死循环
 	ipv6=$(ip -o -6 addr list br-lan | cut -d ' ' -f7)
 	cat /www/ip6.html | grep $(echo $ipv6 | cut -d'/' -f1 |head -n1) > /dev/null
@@ -63,7 +64,12 @@ while [ "1" == "1" ]; do #死循环
 	[ "$check_time" -le 3 ] && check_time=3
 	while [ $num -le $check_time ]; do
 		sleep $sleep_unit
-		[ $(uci_get_by_name $NAME sysmonitor enable 0) == 0 ] && exit 0
+		[ $(uci_get_by_name $NAME sysmonitor enable 0) == 0 ] && {
+			d=$(date "+%Y-%m-%d %H:%M:%S")
+			echo $d": Sysmonitor is down." >> /var/log/sysmonitor.log
+			[ -f /tmp/sysmonitor.run ] && rm -rf /tmp/sysmonitor.run		
+			exit 0
+		}
 		let num=num+sleep_unit
 		if [ -f "/tmp/sysmonitor" ]; then
 			rm /tmp/sysmonitor
